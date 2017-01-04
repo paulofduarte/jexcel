@@ -5,7 +5,7 @@
  * @author: Paul Hodel <paul.hodel@gmail.com>
  * @description: Web spreadsheet
  */
-
+ 
 .jexcel
 {
     border-collapse:separate;
@@ -34,7 +34,7 @@
 }
 .jexcel > tbody > td.edition
 {
-	padding:0px;
+    padding:0px;
     padding-left:4px;
 }
 .jexcel > tbody > tr > td:first-child
@@ -54,7 +54,7 @@
 }
 .jexcel > td.selected
 {
-	background-color:#fff;
+    background-color:#fff;
 }
 .jexcel > tbody > tr > td.readonly
 {
@@ -70,7 +70,7 @@
 }
 .jexcel .highlight
 {
-	background-color:rgba(0,0,0,0.05);
+    background-color:rgba(0,0,0,0.05);
 }
 .jexcel .highlight-left
 {
@@ -82,7 +82,7 @@
 }
 .jexcel .highlight-top
 {
-	border-top:1px solid #000;
+    border-top:1px solid #000;
 }
 .jexcel .highlight-bottom
 {
@@ -90,7 +90,7 @@
 }
 .jexcel .selection
 {
-	background-color:rgba(0,0,0,0.05);
+    background-color:rgba(0,0,0,0.05);
 }
 .jexcel .selection-left
 {
@@ -110,7 +110,7 @@
 }
 .jexcel_corner
 {
-	position:absolute;
+    position:absolute;
     background-color: rgb(0, 0, 0);
     height: 5px;
     width: 5px;
@@ -129,7 +129,7 @@
 
 .jexcel > tbody > tr > td > select, .jexcel > tbody > tr > td > input
 {
-	border:0px;
+    border:0px;
     outline:0px solid transparent;
     width:100%;
     margin:0px;
@@ -163,34 +163,34 @@
 
 .jexcel_textarea
 {
-	position:absolute;
-	top:-999px;
-	left:-999px;
-	width:1px;
-	height:1px;
+    position:absolute;
+    top:-999px;
+    left:-999px;
+    width:1px;
+    height:1px;
 }
 
 .jexcel .results
 {
-	position:absolute;
-	min-height:30px;
-	max-height:200px;
-	width:220px;
-	background-color:#fff;
-	overflow-y:scroll;
-	z-index:99;
-	text-align:left;
-	border:1px solid #ccc;
+    position:absolute;
+    min-height:30px;
+    max-height:200px;
+    width:220px;
+    background-color:#fff;
+    overflow-y:scroll;
+    z-index:99;
+    text-align:left;
+    border:1px solid #ccc;
 }
 .jexcel .results li
 {
-	list-style:none;
-	padding:6px;
-	cursor:pointer;
+    list-style:none;
+    padding:6px;
+    cursor:pointer;
 }
 .jexcel .results li:hover
 {
-	background-color:#eee;
+    background-color:#eee;
 }
 .jexcel .dragline
 {

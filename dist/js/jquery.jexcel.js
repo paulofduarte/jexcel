@@ -99,12 +99,13 @@ var methods = {
                 }
 
                 // Load innitial source for json autocomplete
-                if (options.columns[i].type == 'autocomplete') {
+                if (options.columns[i].type == 'autocomplete' || options.columns[i].type == 'dropdown') {
                     // if remote content
                     if (options.columns[i].url) {
                         results.push($.ajax({
                             url: options.columns[i].url,
                             index: i,
+                            dataType:'json',
                             success: function (result) {
                                 // Create the dynamic sources
                                 $.fn.jexcel.defaults[id].columns[this.index].source = result;
@@ -116,9 +117,6 @@ var methods = {
                         // Combo
                         $.fn.jexcel.defaults[id].columns[i].combo = $(main).jexcel('createCombo', options.columns[i].source);
                     }
-                } else if (options.columns[i].type == 'dropdown') {
-                    // Creating the mapping
-                    $.fn.jexcel.defaults[id].columns[i].combo = $(main).jexcel('createCombo', options.columns[i].source);
                 } else if (options.columns[i].type == 'calendar') {
                     if (! $.fn.jexcel.defaults[id].columns[i].options) {
                         $.fn.jexcel.defaults[id].columns[i].options = [];
@@ -281,9 +279,9 @@ var methods = {
             $(ads).html('<a href="http://github.com/paulhodel/jexcel">Jexcel Spreadsheets</a>');
 
             // Append elements
-            $(this).append(corner);
-            $(this).append(textarea);
-            $(this).append(ads);
+            $('body').append(corner);
+            $('body').append(textarea);
+            $('body').append(ads);
 
             // Prevent dragging
             $(corner).on('dragstart', function () {
