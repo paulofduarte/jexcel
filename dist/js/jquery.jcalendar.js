@@ -119,11 +119,13 @@
                                 $('.jcalendar').find('.jcalendar_month_label').html($(e.target).text());
                                 $($.fn.jcalendar.current).jcalendar('days');
                             } else if (action == 'setDay') {
-                                $('.jcalendar').find('.jcalendar_day').val($(e.target).text());
-                                if (! options.time) {
-                                    $($.fn.jcalendar.current).jcalendar('close', 1);
-                                } else {
-                                    $($.fn.jcalendar.current).jcalendar('days');
+                                if ($(e.target).text()) {
+                                    $('.jcalendar').find('.jcalendar_day').val($(e.target).text());
+                                    if (! options.time) {
+                                        $($.fn.jcalendar.current).jcalendar('close', 1);
+                                    } else {
+                                        $($.fn.jcalendar.current).jcalendar('days');
+                                    }
                                 }
                             } else if (action == 'jcalendar_confirm') {
                                 $($.fn.jcalendar.current).jcalendar('close', 1);
