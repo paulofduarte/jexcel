@@ -1,0 +1,31 @@
+<html>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+
+<script src="../dist/js/jquery.jexcel.js"></script>
+<script src="../dist/js/jquery.jcalendar.js"></script>
+<link rel="stylesheet" href="../dist/css/jquery.jexcel.css" type="text/css" />
+<link rel="stylesheet" href="../dist/css/jquery.jcalendar.css" type="text/css" />
+
+<div id="my"></div>
+
+<script>
+    data = [
+        ['Mazda', 2001, 2000, '2006-01-01'],
+        ['Pegeout', 2010, 5000, '2005-01-01'],
+        ['Honda Fit', 2009, 3000, '2004-01-01'],
+        ['Honda CRV', 2010, 6000, '2003-01-01'],
+    ];
+
+    $('#my').jexcel({
+        data:data,
+        colHeaders: ['Model', 'Price', 'Price', 'Date'],
+        colWidths: [ 300, 80, 100, 100 ],
+        columns: [
+            { type: 'text' },
+            { type: 'text' },
+            { type: 'text' },
+            { type: 'calendar', options: { format:'DD/MM/YYYY' } },
+        ]
+    });
+</script>
+</html>

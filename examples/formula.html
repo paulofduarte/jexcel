@@ -1,0 +1,80 @@
+<html>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+
+<script src="../dist/js/jquery.jexcel.js"></script>
+<link rel="stylesheet" href="../dist/css/jquery.jexcel.css" type="text/css" />
+
+<div id="my"></div>
+
+<script>
+    var formulas = {
+        /**
+         * Custom method: SUM - Example: =SUM(C1:C10), =SUM(A1,A2,A3)
+         *
+         * @param string formula
+         * @return total
+         */
+        sum : function (formula) {
+            // Get main table id
+            var id = $(this.instance).prop('id');
+            // Total to be returned
+            var total = 0;
+            // Check sum type
+            var d = formula.split(/:/);
+            // Which sum to be used
+            if (d.length < 2) {
+                // Explode by comman and sum all columns in the formula
+                d = formula.split(',');
+                $.each($(d), function (k, v) {
+                    v = parseInt($('#' + id).jexcel('getValue', v));
+                    total += v;
+                });
+            } else {
+                t1 = d[0].match(/[a-zA-Z]+/g);
+                t2 = d[1].match(/[a-zA-Z]+/g);
+                // Sum vertical or horizontal
+                if (t1[0] == t2[0]) {
+                    // Some all cells in a vertical way
+                    co = t1;
+                    t1 = d[0].match(/[0-9]+/g);
+                    t2 = d[1].match(/[0-9]+/g);
+                    for (i = t1; i <= t2; i++) {
+                        v = parseInt($('#' + id).jexcel('getValue', co + i));
+                        total += v;
+                    }
+                } else {
+                    // Som all cells in a horizontal way
+                    t1 = $('#' + id).jexcel('id', d[0]).split('-');
+                    t2 = $('#' + id).jexcel('id', d[1]).split('-');
+
+                    for (i = t1[0]; i <= t2[0]; i++) {
+                        v = parseInt($('#' + id).jexcel('getValue', i + '-' + t1[1]));
+                        total += v;
+                    }
+                }
+            }
+
+            try {
+                return total;
+            } catch (e) {
+                return null;
+            }
+        }
+    }
+
+    var data = [
+        ['Furnace',1,10000],
+        ['Tower',2,6000],
+        ['Drum',3,5000],
+        ['Pump',4,4000],
+        ['Total','=SUM(B1:B4)','=(C1+C2+C3+C4)']
+    ];
+
+    $('#my').jexcel({
+        data:data,
+        formulas: formulas,
+        colHeaders: ['Equipment','Quantity', 'Price'],
+        colWidths: [ 400, 100, 200 ]
+    });
+</script>
+</html>

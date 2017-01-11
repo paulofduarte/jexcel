@@ -1,0 +1,65 @@
+<html>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/spectrum/1.8.0/spectrum.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/spectrum/1.8.0/spectrum.min.css" type="text/css" />
+
+<script src="../dist/js/jquery.jexcel.js"></script>
+<link rel="stylesheet" href="../dist/css/jquery.jexcel.css" type="text/css" />
+
+<div id="my"></div>
+
+<script>
+    var spectrumEditor = {
+        // Methods
+        closeEditor : function(cell, save) {
+            // Get value
+            var value = $(cell).find('.editor').spectrum('get').toHexString();
+
+            // Set visual value
+            $(cell).html(value);
+            $(cell).css('color', value);
+
+            // Close edition
+            $(cell).removeClass('edition');
+        },
+        openEditor : function(cell) {
+            var main = this;
+            // Get current content
+            var html = $(cell).html();
+
+            // Basic editor
+            var editor = document.createElement('div');
+            $(cell).html(editor);
+            $(editor).prop('class', 'editor');
+            $(editor).spectrum({ color:html, preferredFormat:'hex', hide: function(color) {
+                main.closeEditor($(cell), true);
+            }});
+            $(editor).spectrum('show');
+        },
+        getValue : function(cell) {
+            return $(cell).html();
+        },
+        setValue : function(cell, value) {
+            $(cell).html(value);
+            $(cell).css('color', value);
+            return true;
+        }
+    }
+
+    data = [
+        ['Google', '#542727'],
+        ['Yahoo', '#724f4f'],
+        ['Bing', '#b43131'],
+    ];
+
+    $('#my').jexcel({
+        data:data,
+        colHeaders: [ 'Name', 'Custom color' ],
+        colWidths: [ 300, 200 ],
+        columns: [
+            { type: 'text' },
+            { type: 'text', editor:spectrumEditor },
+        ]
+    });
+</script>
+</html>
