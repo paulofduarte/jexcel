@@ -1,0 +1,23 @@
+<html>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-csv/0.71/jquery.csv-0.71.min.js"></script>
+
+<script src="../dist/js/jquery.jexcel.js"></script>
+<link rel="stylesheet" href="../dist/css/jquery.jexcel.css" type="text/css" />
+
+<div id="my"></div>
+
+<p><button id='download'>Export my spreadsheet as CSV</button></p>
+
+<script>
+    $('#my').jexcel({
+        csv:'http://cdn.bossanova.uk/demo/demo1.csv',
+        csvHeaders:true,
+        colWidths: [70, 200, 300],
+    });
+
+    $('#download').on('click', function () {
+        $('#my').jexcel('download');
+    })
+</script>
+</html>
