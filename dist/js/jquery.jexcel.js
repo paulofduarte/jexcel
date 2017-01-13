@@ -14,7 +14,7 @@
  * Custom renderer
  * big data (partial table loading)
  * indexing
- * ctrl+z
+ * undo/redo - Implemented (waiting pull request)
  * Context menu
  * Initial loading using setData methods
  * Custom render
@@ -68,6 +68,10 @@ var methods = {
                 $.fn.jexcel.defaults = new Array();
             }
             $.fn.jexcel.defaults[id] = options;
+
+            // Create history track array
+            $.fn.jexcel.defaults[id].history = new Array();
+            $.fn.jexcel.defaults[id].historyIndex = -1;
 
             // Loading initial data from remote sources
             var results = [];
@@ -534,10 +538,8 @@ var methods = {
             // Cut data from the table in excel format
             $(document).on('cut', function() {
                 if ($.fn.jexcel.current) {
-                    // Copy data
-                    $('#' + $.fn.jexcel.current).jexcel('copy', true);
-                    // Remove current data 
-                    $('#' + $.fn.jexcel.current).jexcel('setValue', $('#' + $.fn.jexcel.current).find('.highlight'), '');
+                    // Cut data
+                    $('#' + $.fn.jexcel.current).jexcel('cut');
                 }
             });
 
@@ -629,7 +631,7 @@ var methods = {
                                     }
                                 }
                             }
-                        } else {
+                        } else if (! e.shiftKey && e.ctrlKey) {
                             if (e.which == 65) {
                                 // Ctrl + A
                                 t = $(this).find('.jexcel tbody td').not('.label');
@@ -645,6 +647,16 @@ var methods = {
                                 $('#' + $.fn.jexcel.current).jexcel('download');
                                 // Prevent page selection
                                 e.preventDefault();
+                            } else if (e.which == 89) {
+                                // Ctrl + Y
+                                if (!$($.fn.jexcel.selectedCell).hasClass('edition')) {
+                                    $('#' + $.fn.jexcel.current).jexcel('redo');
+                                }
+                            } else if (e.which == 90) {
+                                // Ctrl + Z
+                                if (!$($.fn.jexcel.selectedCell).hasClass('edition')) {
+                                    $('#' + $.fn.jexcel.current).jexcel('undo');
+                                }
                             }
                         }
                     }
@@ -821,6 +833,9 @@ var methods = {
         } else {
             // Holder
             $.fn.jexcel.edition = $(cell).html();
+
+            // Start recording undo/redo history
+            $(this).jexcel('startNewHistoryRecord');
 
             // If there is a custom editor for it
             if (options.columns[position[0]].editor) {
@@ -1104,16 +1119,22 @@ var methods = {
 
             // After changes
             $(this).jexcel('afterChange');
+
+            // Save history for undo/redo
+            $(this).jexcel('storeCellChange', cell, value, $.fn.jexcel.edition);
         } else {
             if (options.columns[position[0]].type == 'calendar') {
                 // Do nothing - calendar will be closed without keeping the current value
             } else {
                 // Restore value
                 $(cell).html($.fn.jexcel.edition);
-    
+
                 // Finish temporary edition
                 $.fn.jexcel.edition = null;
             }
+
+            // Discard undo/redo record
+            $(this).jexcel('discardCurrentHistoryRecord');
         }
     },
 
@@ -1350,7 +1371,7 @@ var methods = {
 
     /**
      * Update the cells move data TODO: copy multi columns - TODO!
-     * 
+     *
      * @param object o cell origin
      * @param object d cell destination
      * @return void
@@ -1563,6 +1584,24 @@ var methods = {
         return str;
     },
 
+    cut : function () {
+        var main = $(this);
+
+        // Copy data
+        main.jexcel('copy', true);
+        var cells = $(this).find('.highlight');
+
+        // Start a new history record
+        main.jexcel('startNewHistoryRecord');
+        $.each(cells, function (index, cell) {
+            // Store history for undo/redo
+            main.jexcel('storeCellChange', $(cell), '')
+        });
+
+        // Remove current data
+        main.jexcel('setValue', cells, '');
+    },
+
     /**
      * Paste method TODO: if the clipboard is larger than the table create automatically columns/rows?
      * 
@@ -1587,7 +1626,9 @@ var methods = {
             if (parseInt(y + data.length) > $.fn.jexcel.defaults[id].data.length) {
                 $(this).jexcel('insertRow', null, parseInt(y) + data.length - $.fn.jexcel.defaults[id].data.length);
             }
-    
+
+            $(this).jexcel('startNewHistoryRecord');
+
             // Go through the columns to get the data
             for (j = 0; j < data.length; j++) {
                 // Explode column values
@@ -1598,6 +1639,7 @@ var methods = {
     
                     // If cell exists
                     if ($(cell).length > 0) {
+                        $(this).jexcel('storeCellChange', $(cell), row[i]);
                         $(this).jexcel('setValue', $(cell), row[i]);
                     }
                 }
@@ -1747,6 +1789,8 @@ var methods = {
     copyData : function(o, d) {
         var data = $(this).jexcel('getData', true);
 
+        $(this).jexcel('startNewHistoryRecord');
+
         // Cells
         var px = parseInt(o[0]);
         var ux = parseInt(d[0]);
@@ -1777,6 +1821,7 @@ var methods = {
 
                 // Update non-readonly
                 if (! $(cell).hasClass('readonly')) {
+                    $(this).jexcel('storeCellChange', cell, data[posy][posx]);
                     $(this).jexcel('setValue', cell, data[posy][posx]);
                 }
                 posx++;
@@ -1964,6 +2009,94 @@ var methods = {
         pom.href = url;
         pom.setAttribute('download', 'jexcelTable.csv');
         pom.click();
+    },
+
+    /**
+     * Initializes a new history record for undo/redo
+     *
+     * @return null
+     */
+    startNewHistoryRecord : function() {
+        var id = $(this).prop('id');
+
+        // Increment and get the current history index
+        var index = ++$.fn.jexcel.defaults[id].historyIndex;
+
+        // Slice the array to discard undone changes
+        var history = ($.fn.jexcel.defaults[id].history = $.fn.jexcel.defaults[id].history.slice(0, index + 1));
+
+        // Get selection
+        var selection = $(this).find('tbody td.highlight');
+
+        history[index] = {
+            firstSelected: selection[0],
+            lastSelected: selection[selection.length - 1],
+            cellChanges: []
+        };
+    },
+
+    discardCurrentHistoryRecord : function () {
+        var id = $(this).prop('id');
+
+        // Get and decrement the current history index
+        var index = $.fn.jexcel.defaults[id].historyIndex--;
+
+        // Slice the array to discard changes
+        $.fn.jexcel.defaults[id].history = $.fn.jexcel.defaults[id].history.slice(0, index);
+    },
+
+    /**
+     * Store a change on an individual cell for undo redo
+     *
+     * @param object cell changed cell
+     * @param string newValue new cell value
+     * @param string oldValue old cell vaule [optional]
+     */
+    storeCellChange : function(cell, newValue, oldValue) {
+        var id = $(this).prop('id');
+
+        if (oldValue == undefined) {
+            oldValue = $(this).jexcel('getValue', cell);
+        }
+
+        // Store the cell change details
+        $.fn.jexcel.defaults[id].history[$.fn.jexcel.defaults[id].historyIndex].cellChanges.push({
+            cell: cell,
+            newValue: newValue,
+            oldValue: oldValue
+        });
+    },
+
+    /**
+     * Undo last action
+     */
+    undo : function () {
+        var id = $(this).prop('id');
+
+        if ($.fn.jexcel.defaults[id].historyIndex >= 0) {
+            var historyRecord = $.fn.jexcel.defaults[id].history[$.fn.jexcel.defaults[id].historyIndex--];
+            for (var i = 0; i < historyRecord.cellChanges.length; i++) {
+                $(this).jexcel('setValue', historyRecord.cellChanges[i].cell, historyRecord.cellChanges[i].oldValue);
+            }
+
+            $(this).jexcel('updateSelection', historyRecord.firstSelected, historyRecord.lastSelected);
+        }
+    },
+
+    /**
+     * Redo previously undone action
+     */
+    redo : function () {
+        var id = $(this).prop('id');
+
+        if ($.fn.jexcel.defaults[id].historyIndex < $.fn.jexcel.defaults[id].history.length - 1) {
+            var historyRecord = $.fn.jexcel.defaults[id].history[++$.fn.jexcel.defaults[id].historyIndex];
+            for (var i = 0; i < historyRecord.cellChanges.length; i++) {
+                $(this).jexcel('setValue', historyRecord.cellChanges[i].cell, historyRecord.cellChanges[i].newValue);
+            }
+
+            $(this).jexcel('updateSelection', historyRecord.firstSelected, historyRecord.lastSelected);
+        }
     }
 };
 
